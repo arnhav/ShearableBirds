@@ -1,0 +1,12 @@
+# ShearCooldown:
+# The amount of time that must pass before a bird can be sheared
+# again. Calculated in milliseconds. Default 5 min.
+#
+# MinDrop:
+# The minimum number of feathers that will drop.
+#
+# MaxDrop:
+# The maximum number of feathers that will drop.
+ShearCooldown: 300000
+MinDrop: 1
+MaxDrop: 3

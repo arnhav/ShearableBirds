@@ -1,0 +1,6 @@
+name: ShearableBirds
+version: ${project.version}
+main: net.runeage.shearablebirds.ShearableBirds
+api-version: 1.13
+authors: [Tyrriel]
+description: A simple plugin that allows you to shear your birds to ethically gather feathers
