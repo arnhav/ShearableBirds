@@ -2,6 +2,7 @@ package net.runeage.shearablebirds;
 
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Parrot;
@@ -12,13 +13,12 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 public class ShearListener implements Listener {
 
-    private NamespacedKey shearTime = new NamespacedKey(ShearableBirds.getProvidingPlugin(ShearableBirds.class), "shearTime");
+    private final NamespacedKey shearTime = new NamespacedKey(ShearableBirds.getProvidingPlugin(ShearableBirds.class), "shearTime");
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event){
@@ -38,11 +38,11 @@ public class ShearListener implements Listener {
         if (!pdc.has(shearTime, PersistentDataType.LONG))
             pdc.set(shearTime, PersistentDataType.LONG, 0L);
 
-        long lastShear = pdc.get(shearTime, PersistentDataType.LONG);
+        Long lastShear = pdc.get(shearTime, PersistentDataType.LONG);
         long shearCooldown = ShearableBirds.config.getLong("ShearCooldown");
         long now = System.currentTimeMillis();
 
-        if (lastShear + shearCooldown > now) return;
+        if (lastShear != null && lastShear + shearCooldown > now) return;
 
         pdc.set(shearTime, PersistentDataType.LONG, now);
 
@@ -54,12 +54,23 @@ public class ShearListener implements Listener {
 
         if (player.getGameMode() == GameMode.CREATIVE) return;
 
+        if (!EnchantmentTarget.BREAKABLE.includes(itemStack)) return;
         int unbreaking = itemStack.getEnchantmentLevel(Enchantment.DURABILITY);
         int chance = 100 / (unbreaking + 1);
         if(unbreaking == 0 || randomWithRange(0,100) < chance) {
             Damageable meta = (Damageable) itemStack.getItemMeta();
-            meta.setDamage((short) (meta.getDamage() + 1));
-            itemStack.setItemMeta((ItemMeta) meta);
+            if (meta == null) return;
+            int damage = meta.getDamage() + 1;
+            if (damage == itemStack.getType().getMaxDurability()) {
+                if (player.getInventory().getItemInMainHand().getType() == Material.SHEARS) {
+                    player.playEffect(EntityEffect.BREAK_EQUIPMENT_MAIN_HAND);
+                } else {
+                    player.playEffect(EntityEffect.BREAK_EQUIPMENT_OFF_HAND);
+                }
+                return;
+            }
+            meta.setDamage(damage);
+            itemStack.setItemMeta(meta);
         }
     }
 
